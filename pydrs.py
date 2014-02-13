@@ -16,14 +16,17 @@ vmproperties = s._retrieve_properties_traversal(property_names=["name",
 hostproperties = s._retrieve_properties_traversal(property_names=["config.host",
 "summary.quickStats.overallMemoryUsage", "hardware.memorySize"], obj_type="HostSystem")
 
+clusterproperties = s._retrieve_properties_traversal(property_names=["name", "host"], obj_type="ClusterComputeResource")
+
 vms = []
 hosts = []
+clusters = []
 staging = {}
 
 # Define tolerance in % of memory utilization: the greatest span of utilization that is allowed between any two hosts as an int()
 tolerance = float(10)
 
-# Class definitions for hosts and vms
+# Class definitions for hosts and vms and clusters
 class host(object):
         def __init__(self, mor, memtotal, memuse, mempct):
                 self.mor = mor
@@ -39,6 +42,10 @@ class vm(object):
                 self.state = state
                 self.staged = False
 
+class cluster(object):
+        def __init__(self, name, hosts):
+                self.name = name
+                self.hosts = hosts
 
 # Create host and vm objects
 def getproperties():
@@ -59,12 +66,20 @@ def getproperties():
                 percent = "%.2f" % (100 * (memuse / memutil))
                 hosts.append(host(hostmor, memutil, memuse, percent))
 
+        for p in clusterproperties:
+                for prop in p.PropSet:
+                        if prop.Name == "name": name = prop.Val
+                        if prop.Name == "host": chosts = prop.Val.ManagedObjectReference
+                clusters.append(cluster(name, chosts))
+
 # Determine where to move virtual machines to balance cluster
 def balance(vms, hosts, tolerance):
         for x in hosts:
                 for y in hosts:
-                        if x.mor == y.mor: pass
-                        elif abs(x.mempct - y.mempct) > tolerance:
+                        for hostlist in (c.hosts for c in clusters):
+                                hl = hostlist
+                        if x.mor == y.mor or not all(h in hl for h in [str(x.mor), str(y.mor)]): pass
+                        elif (x.mempct - y.mempct) > tolerance:
                                 for vm in vms:
                                         if vm.memalloc < (x.memuse - y.memuse) and vm.host == x.mor:
                                                 print "Staging ", vm.name, " to migrate to ", y.mor, "..."
