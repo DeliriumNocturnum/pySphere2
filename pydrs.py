@@ -88,7 +88,6 @@ def balance(vms, hosts, tolerance):
 						vm.host = y.mor
 						x.memuse -= vm.memalloc
 						y.memuse += vm.memalloc	
-			else: print (x.mempct - y.mempct)
 	if any(vm.staged for vm in vms):
 		migrate()
 		balance(vms, hosts, tolerance)
