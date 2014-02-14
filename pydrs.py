@@ -3,7 +3,6 @@
 # 02/2014
 
 from pysphere import *
-import math
 
 # Connect to vCenter Server
 s = VIServer()
@@ -95,14 +94,6 @@ def balance(vms, hosts, tolerance):
 		migrate()
 	else: print "Nothing to migrate..."
 
-# Wash lists for host and vm and cluster objects, repopulate
-def updatevalues():
-	del vms[:]
-	del hosts[:]
-	del clusters[:]
-	getproperties()
-	return
-
 # Migrate vms
 def migrate():
 	for vmstage in staging.keys():
@@ -110,7 +101,6 @@ def migrate():
 		vmuse.migrate(host=staging[vmstage])
 		for vm in vms:
 			if vm.staged: vm.staged = False
-	updatevalues()
 	return
 
 # Run balance
