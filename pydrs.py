@@ -92,6 +92,8 @@ def balance(vms, hosts, tolerance):
 		break
 	if any(vm.staged for vm in vms):
 		migrate()
+		getproperties()
+		balance(vms, hosts, tolerance)
 	else: print "Nothing to migrate..."
 
 # Migrate vms
